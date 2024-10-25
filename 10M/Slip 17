@@ -1,0 +1,41 @@
+17
+
+
+//Write the program to calculate minimum number of resources needed to avoid deadlock.
+*/
+/*Given: A system has R identical resources, P processes competing for them and N is the maximum need of each process. The task is to find the minimum number of Resources required So that deadlock will never occur. 
+Formula: 
+R >= P * (N - 1) + 1 
+Example:
+Input : P = 3, N = 4
+Output : R >= 10
+
+Input : P = 7, N = 2
+Output : R >= 8 
+*//
+
+
+
+#include <stdio.h>
+
+// Function to calculate the minimum number of resources required to avoid deadlock
+int calculateMinimumResources(int processCount, int maxNeed) {
+    return processCount * (maxNeed - 1) + 1; // Using the formula to calculate minimum resources
+}
+
+int main() {
+    int processCount, maxNeed;
+
+    // Prompt user for input
+    printf("Enter the number of processes and maximum need of each process:\n");
+    if (scanf("%d %d", &processCount, &maxNeed) != 2 || processCount <= 0 || maxNeed <= 0) {
+        printf("Invalid input. Please enter positive integers for processes and maximum need.\n");
+        return 1; // Exit the program with an error code
+    }
+
+    // Calculate and display the minimum number of resources required to avoid deadlock
+    int minimumResources = calculateMinimumResources(processCount, maxNeed);
+    printf("Minimum number of resources needed to avoid deadlock: %d\n", minimumResources);
+
+    return 0; // Exit the program successfully
+}
