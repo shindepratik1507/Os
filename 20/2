@@ -1,0 +1,116 @@
+//Write the simulation program using SJF (non-preemptive). The arrival time and first CPU bursts of different jobs should be input to the system. Assume the fixed I/O waiting time (2 units). The next CPU burst should be generated using random function. The output should give the Gantt chart, Turnaround Time and Waiting time for each process and average times. 
+//
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define MAX_PROCESSES 10
+
+typedef struct {
+    int id;               // Process ID
+    int arrival_time;    // Arrival time
+    int burst_time;      // Initial burst time
+    int remaining_time;  // Remaining time for the CPU burst
+    int completion_time; // Completion time
+    int turnaround_time; // Turnaround time
+    int waiting_time;    // Waiting time
+} Process;
+
+void generateNextBurst(Process *p) {
+    // Randomly generate the next CPU burst time between 1 and 10 units
+    p->remaining_time = rand() % 10 + 1;
+}
+
+void calculateTimes(Process proc[], int n) {
+    int total_turnaround_time = 0, total_waiting_time = 0;
+    
+    for (int i = 0; i < n; i++) {
+        proc[i].turnaround_time = proc[i].completion_time - proc[i].arrival_time;
+        proc[i].waiting_time = proc[i].turnaround_time - proc[i].burst_time;
+        total_turnaround_time += proc[i].turnaround_time;
+        total_waiting_time += proc[i].waiting_time;
+    }
+    
+    printf("\nAverage Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+}
+
+void printGanttChart(Process proc[], int n) {
+    printf("\nGantt Chart:\n|");
+    for (int i = 0; i < n; i++) {
+        printf(" P%d |", proc[i].id);
+    }
+    printf("\n");
+}
+
+int main() {
+    srand(time(0)); // Seed for random number generation
+    Process proc[MAX_PROCESSES];
+    int n;
+
+    // Input number of processes
+    printf("Enter number of processes (max %d): ", MAX_PROCESSES);
+    scanf("%d", &n);
+
+    // Input arrival time and initial burst time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].id = i;
+        printf("Enter arrival time and initial burst time for Process P%d: ", i);
+        scanf("%d %d", &proc[i].arrival_time, &proc[i].burst_time);
+        proc[i].remaining_time = proc[i].burst_time; // Set remaining time
+        proc[i].completion_time = 0; // Initialize completion time
+    }
+
+    // Sort processes by arrival time and then by burst time
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (proc[i].arrival_time > proc[j].arrival_time || 
+               (proc[i].arrival_time == proc[j].arrival_time && proc[i].burst_time > proc[j].burst_time)) {
+                Process temp = proc[i];
+                proc[i] = proc[j];
+                proc[j] = temp;
+            }
+        }
+    }
+
+    int current_time = 0;
+    for (int i = 0; i < n; i++) {
+        // Wait until the process arrives
+        if (current_time < proc[i].arrival_time) {
+            current_time = proc[i].arrival_time;
+        }
+
+        // Process P[i]
+        proc[i].completion_time = current_time + proc[i].remaining_time + 2; // Add 2 for I/O waiting time
+        current_time = proc[i].completion_time; // Update current time
+
+        // Generate next CPU burst for next cycle (if applicable)
+        if (i + 1 < n) {
+            generateNextBurst(&proc[i + 1]);
+        }
+    }
+
+    // Calculate turnaround time and waiting time
+    calculateTimes(proc, n);
+
+    // Print Gantt chart
+    printGanttChart(proc, n);
+
+    // Print turnaround time and waiting time for each process
+    printf("\nProcess\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\n", proc[i].id, proc[i].turnaround_time, proc[i].waiting_time);
+    }
+
+    return 0;
+}
+
+
+
+
