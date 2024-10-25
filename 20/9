@@ -1,0 +1,110 @@
+//
+Partially implement the Menu driven Banker's algorithm for accepting Allocation, Max from user. 
+
+
+
+a) Accept Available 
+b) Display Allocation, Max 
+c) Find Need and display It, 
+d) Display Available Consider the system with 3 resources types A,B, and C with 7,2,6 instances respectively.
+//
+
+
+
+#include <stdio.h>
+
+#define PROCESSES 5
+#define RESOURCES 3
+
+void acceptAllocation(int alloc[PROCESSES][RESOURCES]) {
+    printf("Enter the Allocation matrix:\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("Process P%d: ", i);
+        for (int j = 0; j < RESOURCES; j++) {
+            scanf("%d", &alloc[i][j]);
+        }
+    }
+}
+
+void acceptMax(int max[PROCESSES][RESOURCES]) {
+    printf("Enter the Max matrix:\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("Process P%d: ", i);
+        for (int j = 0; j < RESOURCES; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+}
+
+void findNeed(int alloc[PROCESSES][RESOURCES], int max[PROCESSES][RESOURCES], int need[PROCESSES][RESOURCES]) {
+    for (int i = 0; i < PROCESSES; i++) {
+        for (int j = 0; j < RESOURCES; j++) {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+}
+
+void displayMatrix(const char* title, int matrix[PROCESSES][RESOURCES]) {
+    printf("%s\n", title);
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("P%d: ", i);
+        for (int j = 0; j < RESOURCES; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void displayAvailable(int available[RESOURCES]) {
+    printf("Available Resources: ");
+    for (int i = 0; i < RESOURCES; i++) {
+        printf("%d ", available[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int alloc[PROCESSES][RESOURCES];
+    int max[PROCESSES][RESOURCES];
+    int need[PROCESSES][RESOURCES];
+    int available[RESOURCES] = {7, 2, 6}; // Initial available resources
+    int choice;
+
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Accept Allocation\n");
+        printf("2. Accept Max\n");
+        printf("3. Display Allocation and Max\n");
+        printf("4. Find and Display Need\n");
+        printf("5. Display Available Resources\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                acceptAllocation(alloc);
+                break;
+            case 2:
+                acceptMax(max);
+                break;
+            case 3:
+                displayMatrix("Allocation Matrix:", alloc);
+                displayMatrix("Max Matrix:", max);
+                break;
+            case 4:
+                findNeed(alloc, max, need);
+                displayMatrix("Need Matrix:", need);
+                break;
+            case 5:
+                displayAvailable(available);
+                break;
+            case 6:
+                return 0;
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
+
+    return 0;
+}
