@@ -1,3 +1,5 @@
+1/13/19
+
 //Write a C program to simulate Banker’s algorithm for the purpose of deadlock avoidance. Consider the following snapshot of system, A, B, C and D are the resource type. 
 a) Calculate and display the content of need matrix? 
 b) Is the system in safe state? If display the safe sequence. 
