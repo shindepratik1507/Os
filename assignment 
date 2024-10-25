@@ -1,0 +1,1390 @@
+1. Banker's Algorithm Simulation in C
+
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define P 5 // Number of processes
+#define R 4 // Number of resources
+
+void calculateNeed(int need[P][R], int max[P][R], int allot[P][R]) {
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            need[i][j] = max[i][j] - allot[i][j];
+        }
+    }
+}
+
+bool isSafe(int processes[], int avail[], int max[][R], int allot[][R]) {
+    int need[P][R];
+    calculateNeed(need, max, allot);
+
+    bool finish[P] = {0};
+    int safeSeq[P];
+    int work[R];
+    for (int i = 0; i < R; i++) {
+        work[i] = avail[i];
+    }
+
+    int count = 0;
+    while (count < P) {
+        bool found = false;
+        for (int p = 0; p < P; p++) {
+            if (!finish[p]) {
+                int j;
+                for (j = 0; j < R; j++) {
+                    if (need[p][j] > work[j])
+                        break;
+                }
+
+                if (j == R) {
+                    for (int k = 0; k < R; k++)
+                        work[k] += allot[p][k];
+
+                    safeSeq[count++] = p;
+                    finish[p] = true;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            printf("System is not in a safe state\n");
+            return false;
+        }
+    }
+
+    printf("System is in a safe state.\nSafe sequence is: ");
+    for (int i = 0; i < P ; i++)
+        printf("%d ", safeSeq[i]);
+    printf("\n");
+    return true;
+}
+
+int main() {
+    int processes[] = {0, 1, 2, 3, 4};
+    int avail[] = {3, 3, 2, 2};
+
+    int max[P][R] = {
+        {7, 5, 3, 0},
+        {3, 2, 2, 2},
+        {9, 0, 2, 0},
+        {2, 2, 2, 2},
+        {4, 3, 3, 3}
+    };
+
+    int allot[P][R] = {
+        {0, 1, 0, 0},
+        {2, 0, 0, 1},
+        {3, 0, 2, 1},
+        {2, 1, 1, 0},
+        {0, 0, 2, 2}
+    };
+
+    isSafe(processes, avail, max, allot);
+    return 0;
+}
+
+
+
+
+
+
+2. Shortest Job First (SJF) Scheduling in C
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int waiting_time;
+    int turnaround_time;
+};
+
+void sjfScheduling(struct Process processes[], int n) {
+    int completed = 0, current_time = 0, total_waiting_time = 0, total_turnaround_time = 0;
+    int i, j;
+
+    // Sort processes based on arrival time and burst time
+    for (i = 0; i < n; i++) {
+        for (j = i + 1; j < n; j++) {
+            if (processes[j].arrival_time < processes[i].arrival_time ||
+                (processes[j].arrival_time == processes[i].arrival_time && processes[j].burst_time < processes[i].burst_time)) {
+                struct Process temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+
+    while (completed < n) {
+        int idx = -1;
+        int min_burst_time = 9999;
+
+        // Find the process with the smallest burst time that has arrived
+        for (i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= current_time && processes[i].waiting_time == -1) {
+                if (processes[i].burst_time < min_burst_time) {
+                    min_burst_time = processes[i].burst_time;
+                    idx = i;
+                }
+            }
+        }
+
+        if (idx != -1) {
+            // Process found, update times
+            processes[idx].waiting_time = current_time - processes[idx].arrival_time;
+            current_time += processes[idx].burst_time;
+            processes[idx].turnaround_time = processes[idx].waiting_time + processes[idx].burst_time;
+            completed++;
+            total_waiting_time += processes[idx].waiting_time;
+            total_turnaround_time += processes[idx].turnaround_time;
+        } else {
+            // No process is ready, move to the next time unit
+            current_time++;
+        }
+    }
+
+    // Output results
+    printf("Process\tArrival\tBurst\tWaiting\tTurnaround\n");
+    for (i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\n", processes[i].id, processes[i].arrival_time, processes[i].burst_time, processes[i].waiting_time, processes[i].turnaround_time);
+    }
+
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+int main() {
+    struct Process processes[] = {
+        {0, 0, 8, -1, -1},
+        {1, 1, 4, -1, -1},
+        {2, 2, 9, -1, -1},
+        {3, 3, 5, -1, -1}
+    };
+    int n = sizeof(processes) / sizeof(processes[0]);
+
+    sjfScheduling(processes, n);
+    return 0;
+}
+
+
+
+
+
+
+3. Menu-driven Banker's Algorithm (Partial)
+#include <stdio.h>
+
+#define P 5 // Number of processes
+#define R 3 // Number of resources
+
+int allocation[P][R], max[P][R], available[R];
+
+void displayMatrices() {
+    printf("Allocation Matrix:\n");
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            printf("%d ", allocation[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("Max Matrix:\n");
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            printf("%d ", max[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void acceptInput() {
+    printf("Enter Allocation Matrix:\n");
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            scanf("%d", &allocation[i][j]);
+        }
+    }
+
+    printf("Enter Max Matrix:\n");
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    printf("Enter Available Resources:\n");
+    for (int i = 0; i < R; i++) {
+        scanf("%d", &available[i]);
+    }
+}
+
+int main() {
+    int choice;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Accept Allocation and Max\n");
+        printf("2. Display Allocation and Max\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                acceptInput();
+                break;
+            case 2:
+                displayMatrices();
+                break;
+            case 3:
+                break;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    } while (choice != 3);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+4. Deadlock Detection
+#include <stdio.h>
+#include <stdbool.h>
+
+#define P 5 // Number of processes
+#define R 3 // Number of resources
+
+int allocation[P][R] = {
+    {0, 1, 0},
+    {1, 0, 0},
+    {1, 1, 0},
+    {0, 0, 1},
+    {0, 0, 1}
+};
+
+int max[P][R] = {
+    {0, 1, 0},
+    {1, 0, 1},
+    {1, 1, 1},
+    {0, 0, 1},
+    {0, 0, 1}
+};
+
+int available[R] = {1, 1, 1}; // For example
+
+bool checkDeadlock() {
+    int finish[P] = {0};
+    int work[R];
+    for (int i = 0; i < R; i++) {
+        work[i] = available[i];
+    }
+
+    int count = 0;
+    while (count < P) {
+        bool found = false;
+        for (int p = 0; p < P; p++) {
+            if (!finish[p]) {
+                bool canAllocate = true;
+                for (int j = 0; j < R; j++) {
+                    if (max[p][j] - allocation[p][j] > work[j]) {
+                        canAllocate = false;
+                        break;
+                    }
+                }
+                if (canAllocate) {
+                    for (int k = 0; k < R; k++) {
+                        work[k] += allocation[p][k];
+                    }
+                    finish[p] = 1;
+                    found = true;
+                    count++;
+                }
+            }
+        }
+        if (!found) break; // No processes can proceed
+    }
+
+    for (int i = 0; i < P; i++) {
+        if (!finish[i]) {
+            return true; // Deadlock detected
+        }
+    }
+    return false; // No deadlock
+}
+
+int main() {
+    if (checkDeadlock()) {
+        printf("Deadlock detected!\n");
+    } else {
+        printf("No deadlock.\n");
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+5. FCFS Scheduling
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int waiting_time;
+    int turnaround_time;
+};
+
+void fcfsScheduling(struct Process processes[], int n) {
+    int total_waiting_time = 0, total_turnaround_time = 0;
+
+    processes[0].waiting_time = 0; // First process
+    processes[0].turnaround_time = processes[0].burst_time;
+
+    for (int i = 1; i < n; i++) {
+        processes[i].waiting_time = processes[i - 1].turnaround_time + 2; // Add I/O wait time
+        processes[i].turnaround_time = processes[i].waiting_time + processes[i].burst_time;
+    }
+
+    // Output results
+    printf("Process\tArrival\tBurst\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\n", processes[i].id, processes[i].arrival_time, processes[i].burst_time, processes[i].waiting_time, processes[i].turnaround_time);
+        total_waiting_time += processes[i].waiting_time;
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    struct Process processes[n];
+
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i;
+        printf("Enter arrival time and burst time for Process %d: ", i);
+        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+    }
+
+    fcfsScheduling(processes, n);
+    return 0;
+}
+
+
+
+
+
+
+
+6. Non-preemptive Priority Scheduling
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int priority;
+    int waiting_time;
+    int turnaround_time;
+};
+
+void priorityScheduling(struct Process processes[], int n) {
+    // Sort processes based on arrival time and priority
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (processes[j].arrival_time < processes[i].arrival_time ||
+                (processes[j].arrival_time == processes[i].arrival_time && processes[j].priority < processes[i].priority)) {
+                struct Process temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+
+    int total_waiting_time = 0, total_turnaround_time = 0;
+    processes[0].waiting_time = 0; // First process
+    processes[0].turnaround_time = processes[0].burst_time;
+
+    for (int i = 1; i < n; i++) {
+        processes[i].waiting_time = processes[i - 1].turnaround_time + 2; // Add I/O wait time
+        processes[i].turnaround_time = processes[i].waiting_time + processes[i].burst_time;
+    }
+
+    // Output results
+    printf("Process\tArrival\tBurst\tPriority\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t\t%d\t%d\n", processes[i].id, processes[i].arrival_time, processes[i].burst_time, processes[i].priority, processes[i].waiting_time, processes[i].turnaround_time);
+        total_waiting_time += processes[i].waiting_time;
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    struct Process processes[n];
+
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i;
+        printf("Enter arrival time, burst time, and priority for Process %d: ", i);
+        scanf("%d %d %d", &processes[i].arrival_time, &processes[i].burst_time, &processes[i].priority);
+    }
+
+    priorityScheduling(processes, n);
+    return 0;
+}
+
+
+
+
+
+
+
+
+FIFO Page Replacement Implementation
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 100
+
+void fifo_page_replacement(int pages[], int num_pages, int num_frames) {
+    int frames[MAX_FRAMES] = {0}; // Memory frames
+    int page_faults = 0;
+    int next_frame = 0; // Next frame to be replaced
+    int is_present[MAX_FRAMES] = {0}; // To check if a page is in memory
+
+    printf("Page Reference String: ");
+    for (int i = 0; i < num_pages; i++) {
+        printf("%d ", pages[i]);
+    }
+    printf("\n");
+
+    printf("Frames: ");
+    for (int i = 0; i < num_frames; i++) {
+        printf("_ ");
+    }
+    printf("\n");
+
+    for (int i = 0; i < num_pages; i++) {
+        int current_page = pages[i];
+
+        // Check if page is already in the frame
+        if (!is_present[current_page]) {
+            // If there's a free frame, use it
+            if (next_frame < num_frames) {
+                frames[next_frame] = current_page;
+                is_present[current_page] = 1;
+                next_frame++;
+            } else {
+                // Replace the oldest page
+                is_present[frames[next_frame % num_frames]] = 0; // Remove from present array
+                frames[next_frame % num_frames] = current_page; // Add new page
+                is_present[current_page] = 1; // Mark as present
+                next_frame++;
+            }
+            page_faults++;
+
+            // Print current state of frames
+            for (int j = 0; j < num_frames; j++) {
+                if (j < next_frame) {
+                    printf("%d ", frames[j]);
+                } else {
+                    printf("_ ");
+                }
+            }
+            printf("  [Page Fault]\n");
+        } else {
+            printf("Page %d already in frame. No fault.\n", current_page);
+        }
+    }
+
+    printf("Total Page Faults: %d\n", page_faults);
+}
+
+int main() {
+    int pages[] = {3, 4, 5, 6, 3, 4, 7, 3, 4, 5, 6, 7, 2, 4, 6};
+    int num_pages = sizeof(pages) / sizeof(pages[0]);
+    int num_frames;
+
+    printf("Enter number of memory frames: ");
+    scanf("%d", &num_frames);
+
+    if (num_frames > MAX_FRAMES) {
+        printf("Maximum number of frames is %d\n", MAX_FRAMES);
+        return 1;
+    }
+
+    fifo_page_replacement(pages, num_pages, num_frames);
+    return 0;
+}
+
+
+
+
+
+Used (LRU) page replacement algorithm.
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 20
+
+void printFrames(int frames[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (frames[i] != -1) {
+            printf("%d ", frames[i]);
+        }
+    }
+    printf("\n");
+}
+
+int isPageInFrames(int frames[], int n, int page) {
+    for (int i = 0; i < n; i++) {
+        if (frames[i] == page) {
+            return 1; // Page is in frames
+        }
+    }
+    return 0; // Page is not in frames
+}
+
+int findLRUPage(int frames[], int lastUsed[], int n) {
+    int min = lastUsed[0], minIndex = 0;
+    for (int i = 1; i < n; i++) {
+        if (lastUsed[i] < min) {
+            min = lastUsed[i];
+            minIndex = i;
+        }
+    }
+    return minIndex;
+}
+
+void lru(int referenceString[], int n, int numFrames) {
+    int frames[MAX_FRAMES];
+    int lastUsed[MAX_FRAMES];
+    int pageFaults = 0;
+    int time = 0;
+
+    // Initialize frames
+    for (int i = 0; i < numFrames; i++) {
+        frames[i] = -1;
+        lastUsed[i] = -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int currentPage = referenceString[i];
+
+        // Check if page is already in frames
+        if (!isPageInFrames(frames, numFrames, currentPage)) {
+            // Page fault occurs
+            pageFaults++;
+            int replaceIndex = -1;
+
+            // Find an empty frame
+            for (int j = 0; j < numFrames; j++) {
+                if (frames[j] == -1) {
+                    replaceIndex = j;
+                    break;
+                }
+            }
+
+            // If all frames are full, find the LRU page to replace
+            if (replaceIndex == -1) {
+                replaceIndex = findLRUPage(frames, lastUsed, numFrames);
+            }
+
+            // Replace the page
+            frames[replaceIndex] = currentPage;
+            lastUsed[replaceIndex] = time;
+        } else {
+            // Update last used time
+            for (int j = 0; j < numFrames; j++) {
+                if (frames[j] == currentPage) {
+                    lastUsed[j] = time;
+                    break;
+                }
+            }
+        }
+
+        time++;
+        printf("Current frames: ");
+        printFrames(frames, numFrames);
+    }
+
+    printf("Total number of page faults: %d\n", pageFaults);
+}
+
+int main() {
+    int referenceString[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2};
+    int n = sizeof(referenceString) / sizeof(referenceString[0]);
+    int numFrames;
+
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &numFrames);
+
+    if (numFrames > MAX_FRAMES) {
+        printf("Maximum number of frames is %d.\n", MAX_FRAMES);
+        return 1;
+    }
+
+    lru(referenceString, n, numFrames);
+
+    return 0;
+}
+
+
+
+
+
+•C Program for AO* Algorithm
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define MAX_NODES 100
+
+typedef struct {
+    int vertex;
+    int cost;
+} Edge;
+
+typedef struct {
+    Edge edges[MAX_NODES];
+    int count;
+} Node;
+
+typedef struct {
+    Node nodes[MAX_NODES];
+    int numNodes;
+} Graph;
+
+typedef struct {
+    int vertex;
+    int cost;
+} PriorityQueueNode;
+
+typedef struct {
+    PriorityQueueNode elements[MAX_NODES];
+    int size;
+} PriorityQueue;
+
+// Function prototypes
+void initGraph(Graph *graph, int numNodes);
+void addEdge(Graph *graph, int from, int to, int cost);
+void initPriorityQueue(PriorityQueue *pq);
+void enqueue(PriorityQueue *pq, int vertex, int cost);
+PriorityQueueNode dequeue(PriorityQueue *pq);
+bool isEmpty(PriorityQueue *pq);
+int aoStar(Graph *graph, int start, int goal, int heuristic[]);
+
+int main() {
+    Graph graph;
+    int numNodes = 6; // Number of nodes in the graph
+    int heuristic[] = {0, 2, 1, 1, 3, 0}; // Heuristic values for each node
+
+    initGraph(&graph, numNodes);
+
+    // Adding edges with costs (example graph)
+    addEdge(&graph, 0, 1, 1);
+    addEdge(&graph, 0, 2, 4);
+    addEdge(&graph, 1, 2, 2);
+    addEdge(&graph, 1, 3, 5);
+    addEdge(&graph, 2, 4, 3);
+    addEdge(&graph, 3, 5, 1);
+    addEdge(&graph, 4, 5, 2);
+
+    int start = 0; // Starting node
+    int goal = 5;  // Target node
+
+    int minCost = aoStar(&graph, start, goal, heuristic);
+    printf("Minimum cost from node %d to node %d is: %d\n", start, goal, minCost);
+
+    return 0;
+}
+
+// Initialize the graph
+void initGraph(Graph *graph, int numNodes) {
+    graph->numNodes = numNodes;
+    for (int i = 0; i < numNodes; i++) {
+        graph->nodes[i].count = 0;
+    }
+}
+
+// Add edge to the graph
+void addEdge(Graph *graph, int from, int to, int cost) {
+    graph->nodes[from].edges[graph->nodes[from].count].vertex = to;
+    graph->nodes[from].edges[graph->nodes[from].count].cost = cost;
+    graph->nodes[from].count++;
+}
+
+// Initialize the priority queue
+void initPriorityQueue(PriorityQueue *pq) {
+    pq->size = 0;
+}
+
+// Enqueue in the priority queue
+void enqueue(PriorityQueue *pq, int vertex, int cost) {
+    pq->elements[pq->size].vertex = vertex;
+    pq->elements[pq->size].cost = cost;
+    pq->size++;
+}
+
+// Dequeue from the priority queue
+PriorityQueueNode dequeue(PriorityQueue *pq) {
+    int minIndex = 0;
+    for (int i = 1; i < pq->size; i++) {
+        if (pq->elements[i].cost < pq->elements[minIndex].cost) {
+            minIndex = i;
+        }
+    }
+    PriorityQueueNode minNode = pq->elements[minIndex];
+    pq->elements[minIndex] = pq->elements[pq->size - 1];
+    pq->size--;
+    return minNode;
+}
+
+// Check if the priority queue is empty
+bool isEmpty(PriorityQueue *pq) {
+    return pq->size == 0;
+}
+
+// AO* algorithm implementation
+int aoStar(Graph *graph, int start, int goal, int heuristic[]) {
+    int cost[MAX_NODES];
+    bool visited[MAX_NODES] = {false};
+    PriorityQueue pq;
+
+    for (int i = 0; i < graph->numNodes; i++) {
+        cost[i] = INT_MAX; // Initialize costs to infinity
+    }
+    cost[start] = 0;
+
+    initPriorityQueue(&pq);
+    enqueue(&pq, start, heuristic[start]);
+
+    while (!isEmpty(&pq)) {
+        PriorityQueueNode currentNode = dequeue(&pq);
+        int currentVertex = currentNode.vertex;
+
+        if (visited[currentVertex]) {
+            continue;
+        }
+
+        visited[currentVertex] = true;
+
+        if (currentVertex == goal) {
+            return cost[currentVertex];
+        }
+
+        for (int i = 0; i < graph->nodes[currentVertex].count; i++) {
+            Edge edge = graph->nodes[currentVertex].edges[i];
+            int newCost = cost[currentVertex] + edge.cost;
+
+            if (!visited[edge.vertex] && newCost < cost[edge.vertex]) {
+                cost[edge.vertex] = newCost;
+                enqueue(&pq, edge.vertex, newCost + heuristic[edge.vertex]);
+            }
+        }
+    }
+
+    return -1; // Return -1 if the goal is unreachable
+}
+
+
+
+
+
+1. Demand Paging using OPT
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 20
+
+void printFrames(int frames[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (frames[i] != -1) {
+            printf("%d ", frames[i]);
+        }
+    }
+    printf("\n");
+}
+
+int findOptimalPage(int frames[], int n, int pageReference[], int currentIndex, int totalPages) {
+    int farthest = -1;
+    int indexToReplace = -1;
+
+    for (int i = 0; i < n; i++) {
+        int j;
+        for (j = currentIndex; j < totalPages; j++) {
+            if (frames[i] == pageReference[j]) {
+                if (j > farthest) {
+                    farthest = j;
+                    indexToReplace = i;
+                }
+                break;
+            }
+        }
+        if (j == totalPages) {
+            return i; // This page is never going to be used again
+        }
+    }
+    return indexToReplace;
+}
+
+void optimalPageReplacement(int pageReference[], int n, int numFrames) {
+    int frames[MAX_FRAMES];
+    int pageFaults = 0;
+
+    // Initialize frames
+    for (int i = 0; i < numFrames; i++) {
+        frames[i] = -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int currentPage = pageReference[i];
+
+        // Check if page is already in frames
+        int isPresent = 0;
+        for (int j = 0; j < numFrames; j++) {
+            if (frames[j] == currentPage) {
+                isPresent = 1;
+                break;
+            }
+        }
+
+        // If page is not present in frames, perform replacement
+        if (!isPresent) {
+            pageFaults++;
+            int replaceIndex = findOptimalPage(frames, numFrames, pageReference, i + 1, n);
+            frames[replaceIndex] = currentPage;
+        }
+
+        printf("Current frames after accessing %d: ", currentPage);
+        printFrames(frames, numFrames);
+    }
+
+    printf("Total number of page faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pageReference[] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8};
+    int n = sizeof(pageReference) / sizeof(pageReference[0]);
+    int numFrames = 3; // Number of frames
+
+    optimalPageReplacement(pageReference, n, numFrames);
+
+    return 0;
+}
+
+
+
+
+
+2. Round Robin Scheduling
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_PROCESSES 10
+
+typedef struct {
+    int id;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime;
+    int turnaroundTime;
+    int waitingTime;
+} Process;
+
+void printGanttChart(Process processes[], int n, int totalTime) {
+    printf("\nGantt Chart:\n");
+    for (int i = 0; i < totalTime; i++) {
+        printf("-");
+    }
+    printf("\n|");
+    for (int i = 0; i < n; i++) {
+        if (processes[i].burstTime > 0) {
+            printf(" P%d |", processes[i].id);
+        }
+    }
+    printf("\n");
+    for (int i = 0; i < totalTime; i++) {
+        printf("-");
+    }
+    printf("\n");
+}
+
+void roundRobin(Process processes[], int n, int timeQuantum) {
+    int totalTime = 0;
+    int completed = 0;
+
+    while (completed < n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrivalTime <= totalTime && processes[i].remainingTime > 0) {
+                if (processes[i].remainingTime > timeQuantum) {
+                    totalTime += timeQuantum;
+                    processes[i].remainingTime -= timeQuantum;
+                } else {
+                    totalTime += processes[i].remainingTime;
+                    processes[i].waitingTime = totalTime - processes[i].arrivalTime - processes[i].burstTime;
+                    processes[i].turnaroundTime = totalTime - processes[i].arrivalTime;
+                    processes[i].remainingTime = 0;
+                    completed++;
+                }
+            }
+        }
+    }
+
+    // Calculate average times
+    float totalWaitingTime = 0;
+    float totalTurnaroundTime = 0;
+
+    printf("\nProcess\tArrival\tBurst\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        totalWaitingTime += processes[i].waitingTime;
+        totalTurnaroundTime += processes[i].turnaroundTime;
+        printf("P%d\t%d\t%d\t%d\t%d\n", processes[i].id, processes[i].arrivalTime, processes[i].burstTime,
+               processes[i].waitingTime, processes[i].turnaroundTime);
+    }
+
+    printf("Average Waiting Time: %.2f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time: %.2f\n", totalTurnaroundTime / n);
+}
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n, timeQuantum;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1; // Process IDs from 1 to n
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &processes[i].arrivalTime, &processes[i].burstTime);
+        processes[i].remainingTime = processes[i].burstTime; // Initialize remaining time
+        processes[i].waitingTime = 0;
+        processes[i].turnaroundTime = 0;
+    }
+
+    printf("Enter the time quantum: ");
+    scanf("%d", &timeQuantum);
+
+    roundRobin(processes, n, timeQuantum);
+    printGanttChart(processes, n, 20); // Change this to the appropriate total time for your Gantt chart
+
+    return 0;
+}
+
+
+
+
+
+1. Demand Paging using FIFO
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 20
+
+void printFrames(int frames[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (frames[i] != -1) {
+            printf("%d ", frames[i]);
+        }
+    }
+    printf("\n");
+}
+
+void fifoPageReplacement(int pageReference[], int n, int numFrames) {
+    int frames[MAX_FRAMES];
+    int pageFaults = 0;
+    int index = 0;
+
+    // Initialize frames
+    for (int i = 0; i < numFrames; i++) {
+        frames[i] = -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int currentPage = pageReference[i];
+
+        // Check if the page is already in frames
+        int isPresent = 0;
+        for (int j = 0; j < numFrames; j++) {
+            if (frames[j] == currentPage) {
+                isPresent = 1;
+                break;
+            }
+        }
+
+        // If the page is not present in frames, perform replacement
+        if (!isPresent) {
+            pageFaults++;
+            frames[index] = currentPage; // Replace the oldest page
+            index = (index + 1) % numFrames; // Move to the next frame
+        }
+
+        printf("Current frames after accessing %d: ", currentPage);
+        printFrames(frames, numFrames);
+    }
+
+    printf("Total number of page faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pageReference[] = {0, 2, 1, 6, 4, 0, 1, 0, 3, 1, 2, 1};
+    int n = sizeof(pageReference) / sizeof(pageReference[0]);
+    int numFrames;
+
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &numFrames);
+
+    fifoPageReplacement(pageReference, n, numFrames);
+
+    return 0;
+}
+
+
+
+
+
+
+2. Preemptive Shortest Job First (SJF) Scheduling
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MAX_PROCESSES 10
+
+typedef struct {
+    int id;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime;
+    int turnaroundTime;
+    int waitingTime;
+} Process;
+
+void printGanttChart(Process processes[], int n, int totalTime) {
+    printf("\nGantt Chart:\n");
+    for (int i = 0; i < totalTime; i++) {
+        printf("-");
+    }
+    printf("\n|");
+    for (int i = 0; i < n; i++) {
+        if (processes[i].burstTime > 0) {
+            printf(" P%d |", processes[i].id);
+        }
+    }
+    printf("\n");
+    for (int i = 0; i < totalTime; i++) {
+        printf("-");
+    }
+    printf("\n");
+}
+
+void preemptiveSJF(Process processes[], int n) {
+    int totalTime = 0;
+    int completed = 0;
+
+    while (completed < n) {
+        int shortestIndex = -1;
+        int shortestTime = INT_MAX;
+
+        // Find the process with the shortest remaining time
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrivalTime <= totalTime && processes[i].remainingTime > 0 && processes[i].remainingTime < shortestTime) {
+                shortestTime = processes[i].remainingTime;
+                shortestIndex = i;
+            }
+        }
+
+        if (shortestIndex != -1) {
+            processes[shortestIndex].remainingTime--;
+            totalTime++;
+
+            // If a process is completed
+            if (processes[shortestIndex].remainingTime == 0) {
+                processes[shortestIndex].turnaroundTime = totalTime - processes[shortestIndex].arrivalTime;
+                processes[shortestIndex].waitingTime = processes[shortestIndex].turnaroundTime - processes[shortestIndex].burstTime;
+                completed++;
+            }
+        } else {
+            totalTime++; // Idle time if no process is available
+        }
+    }
+
+    // Calculate average times
+    float totalWaitingTime = 0;
+    float totalTurnaroundTime = 0;
+
+    printf("\nProcess\tArrival\tBurst\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        totalWaitingTime += processes[i].waitingTime;
+        totalTurnaroundTime += processes[i].turnaroundTime;
+        printf("P%d\t%d\t%d\t%d\t%d\n", processes[i].id, processes[i].arrivalTime, processes[i].burstTime,
+               processes[i].waitingTime, processes[i].turnaroundTime);
+    }
+
+    printf("Average Waiting Time: %.2f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time: %.2f\n", totalTurnaroundTime / n);
+}
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1; // Process IDs from 1 to n
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &processes[i].arrivalTime, &processes[i].burstTime);
+        processes[i].remainingTime = processes[i].burstTime; // Initialize remaining time
+        processes[i].waitingTime = 0;
+        processes[i].turnaroundTime = 0;
+    }
+
+    preemptiveSJF(processes, n);
+    printGanttChart(processes, n, 20); // Change this to the appropriate total time for your Gantt chart
+
+    return 0;
+}
+
+
+
+
+
+
+
+A* Algorithm for 8-Puzzle Problem in C
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+#define N 3 // Size of the puzzle
+#define MAX 10000 // Maximum possible states
+
+typedef struct {
+    int state[N][N];
+    int zeroX, zeroY; // Position of the blank (zero)
+    int g; // Cost from start to the node
+    int h; // Heuristic cost to the goal
+    int f; // Total cost
+    struct Node* parent; // Pointer to the parent node
+} Node;
+
+Node* openList[MAX];
+int openListSize = 0;
+bool closedList[MAX][N][N]; // To track visited states
+
+// Function prototypes
+int heuristic(int state[N][N], int goal[N][N]);
+bool isGoalState(int state[N][N], int goal[N][N]);
+void printState(int state[N][N]);
+void moveZero(Node* node, int newX, int newY);
+bool isInClosedList(int state[N][N]);
+void addToOpenList(Node* node);
+Node* removeFromOpenList();
+void aStar(int initialState[N][N], int goalState[N][N]);
+
+int main() {
+    int initialState[N][N] = {
+        {1, 2, 3},
+        {4, 0, 5},
+        {7, 8, 6}
+    };
+    
+    int goalState[N][N] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 0}
+    };
+
+    aStar(initialState, goalState);
+
+    return 0;
+}
+
+int heuristic(int state[N][N], int goal[N][N]) {
+    int distance = 0;
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            if (state[i][j] != 0) { // Skip the blank space
+                int goalX, goalY;
+                for (goalX = 0; goalX < N; goalX++) {
+                    for (goalY = 0; goalY < N; goalY++) {
+                        if (goal[goalX][goalY] == state[i][j]) {
+                            distance += abs(i - goalX) + abs(j - goalY);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return distance;
+}
+
+bool isGoalState(int state[N][N], int goal[N][N]) {
+    return memcmp(state, goal, sizeof(int) * N * N) == 0;
+}
+
+void printState(int state[N][N]) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            printf("%d ", state[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void moveZero(Node* node, int newX, int newY) {
+    int newState[N][N];
+    memcpy(newState, node->state, sizeof(newState));
+    int temp = newState[node->zeroX][node->zeroY];
+    newState[node->zeroX][node->zeroY] = newState[newX][newY];
+    newState[newX][newY] = temp;
+
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    memcpy(newNode->state, newState, sizeof(newState));
+    newNode->zeroX = newX;
+    newNode->zeroY = newY;
+    newNode->g = node->g + 1;
+    newNode->h = heuristic(newState, newState); // h function is recalculated
+    newNode->f = newNode->g + newNode->h;
+    newNode->parent = node;
+
+    addToOpenList(newNode);
+}
+
+bool isInClosedList(int state[N][N]) {
+    for (int i = 0; i < openListSize; i++) {
+        if (memcmp(openList[i]->state, state, sizeof(int) * N * N) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void addToOpenList(Node* node) {
+    if (!isInClosedList(node->state)) {
+        openList[openListSize++] = node;
+    }
+}
+
+Node* removeFromOpenList() {
+    if (openListSize == 0) return NULL;
+
+    Node* bestNode = openList[0];
+    int bestIndex = 0;
+
+    for (int i = 1; i < openListSize; i++) {
+        if (openList[i]->f < bestNode->f) {
+            bestNode = openList[i];
+            bestIndex = i;
+        }
+    }
+
+    // Remove the best node from open list
+    for (int i = bestIndex; i < openListSize - 1; i++) {
+        openList[i] = openList[i + 1];
+    }
+    openListSize--;
+    return bestNode;
+}
+
+void aStar(int initialState[N][N], int goalState[N][N]) {
+    Node* initialNode = (Node*)malloc(sizeof(Node));
+    memcpy(initialNode->state, initialState, sizeof(initialState));
+    initialNode->zeroX = 1; // Row index of 0 in initial state
+    initialNode->zeroY = 1; // Column index of 0 in initial state
+    initialNode->g = 0;
+    initialNode->h = heuristic(initialNode->state, goalState);
+    initialNode->f = initialNode->g + initialNode->h;
+    initialNode->parent = NULL;
+
+    addToOpenList(initialNode);
+
+    while (openListSize > 0) {
+        Node* currentNode = removeFromOpenList();
+
+        if (isGoalState(currentNode->state, goalState)) {
+            printf("Solution found:\n");
+            Node* temp = currentNode;
+            while (temp) {
+                printState(temp->state);
+                temp = temp->parent;
+            }
+            return;
+        }
+
+        closedList[openListSize][currentNode->zeroX][currentNode->zeroY] = true;
+
+        int directions[4][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} }; // Up, Down, Left, Right
+        for (int i = 0; i < 4; i++) {
+            int newX = currentNode->zeroX + directions[i][0];
+            int newY = currentNode->zeroY + directions[i][1];
+            if (newX >= 0 && newX < N && newY >= 0 && newY < N) {
+                moveZero(currentNode, newX, newY);
+            }
+        }
+    }
+
+    printf("No solution found.\n");
+}
