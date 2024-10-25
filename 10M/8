@@ -1,0 +1,56 @@
+//Write a C program to accept the number of process and resources and find the need matrix content and display it. *//
+
+
+
+#include <stdio.h>
+
+int main() {
+    int num_processes, num_resources;
+
+    // Input number of processes and resources
+    printf("Enter the number of processes: ");
+    scanf("%d", &num_processes);
+
+    printf("Enter the number of resources: ");
+    scanf("%d", &num_resources);
+
+    int max[num_processes][num_resources];
+    int allocation[num_processes][num_resources];
+    int need[num_processes][num_resources];
+
+    // Input the Maximum matrix
+    printf("\nEnter the Maximum matrix:\n");
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            printf("Max[%d][%d]: ", i, j);
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    // Input the Allocation matrix
+    printf("\nEnter the Allocation matrix:\n");
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            printf("Allocation[%d][%d]: ", i, j);
+            scanf("%d", &allocation[i][j]);
+        }
+    }
+
+    // Calculate the Need matrix
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+
+    // Display the Need matrix
+    printf("\nNeed Matrix:\n");
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            printf("%d ", need[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
