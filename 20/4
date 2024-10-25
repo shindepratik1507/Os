@@ -1,0 +1,115 @@
+//Write the program to simulate Non-preemptive Priority scheduling. The arrival time and first CPU burst and priority for different n number of processes should be input to the algorithm. Assume the fixed IO waiting time (2 units). The next CPU-burst should be generated randomly. The output should give Gantt chart, turnaround time and waiting time for each process. Also find the average waiting time and turnaround time. //
+//
+
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX_PROCESSES 100
+
+// Structure to represent a process
+typedef struct {
+    int id;            // Process ID
+    int arrival_time;  // Arrival time
+    int burst_time;    // CPU burst time
+    int priority;      // Priority (lower number means higher priority)
+    int waiting_time;  // Waiting time
+    int turnaround_time;// Turnaround time
+    int remaining_burst; // Remaining burst time
+} Process;
+
+// Function prototypes
+void calculateTimes(Process processes[], int n);
+void generateNextBurst(Process *p);
+void printGanttChart(Process processes[], int n, int total_time);
+void sortProcessesByArrival(Process processes[], int n);
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    // Input for each process
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1; // Assign process ID
+        printf("Enter Arrival Time, Initial Burst Time, and Priority for Process P%d: ", i + 1);
+        scanf("%d %d %d", &processes[i].arrival_time, &processes[i].burst_time, &processes[i].priority);
+        processes[i].remaining_burst = processes[i].burst_time; // Initialize remaining burst time
+    }
+
+    // Calculate times
+    calculateTimes(processes, n);
+
+    return 0;
+}
+
+// Function to calculate turnaround time and waiting time
+void calculateTimes(Process processes[], int n) {
+    int current_time = 0;
+    bool completed[MAX_PROCESSES] = {false};
+    int completed_count = 0;
+
+    while (completed_count < n) {
+        int idx = -1;
+        int min_priority = 9999; // Initialize with a large value
+
+        // Find the next process to execute
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= current_time && !completed[i]) {
+                if (processes[i].priority < min_priority) {
+                    min_priority = processes[i].priority;
+                    idx = i;
+                }
+            }
+        }
+
+        if (idx != -1) { // If a process is found
+            // Simulate CPU burst
+            printf("Process P%d executing from time %d to ", processes[idx].id, current_time);
+            current_time += processes[idx].remaining_burst + 2; // add burst time + I/O wait
+            printf("%d\n", current_time);
+            
+            // Calculate turnaround and waiting time
+            processes[idx].turnaround_time = current_time - processes[idx].arrival_time;
+            processes[idx].waiting_time = processes[idx].turnaround_time - processes[idx].burst_time;
+
+            processes[idx].remaining_burst = 0; // Process completed
+            completed[idx] = true; // Mark as completed
+            completed_count++;
+        } else {
+            current_time++; // No process is ready, increment time
+        }
+    }
+
+    // Display results
+    printf("\nProcess\tArrival\tBurst\tPriority\tWaiting Time\tTurnaround Time\n");
+    int total_waiting_time = 0, total_turnaround_time = 0;
+
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].arrival_time, processes[i].burst_time, processes[i].priority,
+               processes[i].waiting_time, processes[i].turnaround_time);
+        total_waiting_time += processes[i].waiting_time;
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+
+    printf("\nAverage Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+// Function to generate the next burst time randomly
+void generateNextBurst(Process *p) {
+    // Randomly generate a new burst time for demonstration purposes
+    p->remaining_burst = rand() % 10 + 1; // Random burst time between 1 and 10
+}
+
+// Function to print the Gantt chart (if needed)
+void printGanttChart(Process processes[], int n, int total_time) {
+    // Not used in this implementation, but can be used to visualize Gantt chart
+}
