@@ -1,0 +1,67 @@
+3.  process id burst times
+
+#include <stdio.h>
+
+int main() {
+    int pid[15]; // Process IDs
+    int bt[15];  // Burst Times
+    int n;
+
+    // Get the number of processes
+    printf("Enter the number of processes (max 15): ");
+    scanf("%d", &n);
+
+    // Validate the number of processes
+    if (n <= 0 || n > 15) {
+        printf("Invalid number of processes. Please enter a number between 1 and 15.\n");
+        return 1;
+    }
+
+    // Get process IDs
+    printf("Enter process IDs of all the processes: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &pid[i]);
+    }
+
+    // Get burst times
+    printf("Enter burst times of all the processes: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &bt[i]);
+        // Validate burst time
+        if (bt[i] < 0) {
+            printf("Invalid burst time for process %d. Please enter a non-negative integer.\n", pid[i]);
+            return 1;
+        }
+    }
+
+    int wt[n]; // Waiting Times
+    wt[0] = 0; // Waiting time for the first process is 0
+
+    // Calculate waiting time for each process
+    for (int i = 1; i < n; i++) {
+        wt[i] = bt[i - 1] + wt[i - 1];
+    }
+
+    printf("Process ID\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    float twt = 0.0; // Total Waiting Time
+    float tat = 0.0; // Total Turnaround Time
+
+    // Calculate and print waiting time and turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        int turnaroundTime = bt[i] + wt[i]; // Turnaround Time = Burst Time + Waiting Time
+        printf("%d\t\t%d\t\t%d\t\t%d\n", pid[i], bt[i], wt[i], turnaroundTime);
+
+        // Calculate total waiting time and total turnaround time
+        twt += wt[i];
+        tat += turnaroundTime;
+    }
+
+    // Calculate average waiting time and average turnaround time
+    float awt = twt / n;
+    float att = tat / n;
+
+    printf("Avg. waiting time = %.2f\n", awt);
+    printf("Avg. turnaround time = %.2f\n", att);
+
+    return 0;
+}
