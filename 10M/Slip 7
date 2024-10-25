@@ -1,4 +1,7 @@
-//Write a program to create a child process using fork(). The parent should goto sleep state and child process should begin its execution. In the child process, use exec!() to execute the "Is" command//
+7/9/15/19/20
+
+
+//Write a program to create a child process using fork(). The parent should goto sleep state and child process should begin its execution. In the child process, use exec!() to execute the "Ls" command//
 
 
 #include <stdio.h>
