@@ -1,0 +1,51 @@
+
+//Write a program that demonstrates the use of nice () system call. After a child process is started using fork (), assign higher priority to the child using nice () system call//
+
+
+
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <errno.h>
+
+int main() {
+    pid_t pid = fork();  // Create a child process
+
+    if (pid < 0) {
+        // If pid < 0, fork() failed
+        perror("Fork failed");
+        return 1;
+    } else if (pid == 0) {
+        // Child process
+        printf("Child Process ID: %d\n", getpid());
+
+        // Attempt to set higher priority for child process
+        int priority = nice(-10);  // Increase priority by setting a negative nice value
+
+        if (priority == -1 && errno != 0) {
+            perror("Failed to set priority");
+        } else {
+            printf("Child priority set to: %d\n", priority);
+        }
+
+        // Simulate some work
+        for (int i = 0; i < 5; i++) {
+            printf("Child process working with higher priority\n");
+            sleep(1);
+        }
+
+        exit(0);
+    } else {
+        // Parent process
+        printf("Parent Process ID: %d\n", getpid());
+
+        // Wait for the child process to finish
+        wait(NULL);
+        printf("Child process has completed.\n");
+    }
+
+    return 0;
+}
