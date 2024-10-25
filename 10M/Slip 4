@@ -1,0 +1,29 @@
+
+//Write a program to illustrate the concept of orphan process (Using fork() and sleep())//
+
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int main() {
+    pid_t pid = fork();  // Create a child process
+
+    if (pid < 0) {
+        // If pid < 0, fork() failed
+        perror("Fork failed");
+        return 1;
+    } else if (pid > 0) {
+        // Parent process
+        printf("Parent Process ID: %d\n", getpid());
+        printf("Parent process will terminate now.\n");
+        sleep(2);  // Give child time to become an orphan
+    } else {
+        // Child process
+        sleep(5);  // Ensure the parent process terminates before the child
+        printf("Child Process ID: %d, Parent Process ID: %d\n", getpid(), getppid());
+        printf("I am an orphan process now.\n");
+    }
+
+    return 0;
+}
